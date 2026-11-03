@@ -258,3 +258,24 @@ Click "Add webhook".
 Push a small commit to your repository.
 Check the Jenkins dashboard — a new build should start automatically within a few seconds, with no manual trigger.
 ```
+
+## ECR + Jenkins Setup
+
+### Create ECR Repository
+```sh
+aws ecr create-repository \
+    --repository-name jenkins-argocd-eks-demo/<App-Name> \
+    --region ap-southeast-2
+```
+
+### Add ECR push permission to Jenkins IAM role
+```sh
+aws iam attach-role-policy \
+    --role-name jenkins-iam-role \
+    --policy-arn arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser
+```
+
+## Verify the CI part
+```text
+Now write the CI half of the Jenkinsfile: Checkout → Build → Test → Push to ECR. Push a commit, confirm the image actually lands in ECR. This is a complete, testable milestone on its own, before anything touches Kubernetes.
+```
