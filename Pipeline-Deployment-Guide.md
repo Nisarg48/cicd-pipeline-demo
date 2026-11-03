@@ -216,3 +216,45 @@ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 ```text
 http://<Public_IP>:8080
 ```
+
+## Jenkins to GitHub Connection — UI Steps
+
+### Step 1: Confirm the GitHub plugin is installed (Jenkins UI)
+```text
+Go to Manage Jenkins > Plugins > Installed.
+Search for "GitHub".
+If not present, install it from the Available tab and restart Jenkins if prompted.
+```
+
+### Step 2: Create a Pipeline job (Jenkins UI)
+```text
+From the Jenkins dashboard, click "New Item".
+Enter a name, select "Pipeline", click OK.
+Under the "Pipeline" section, set Definition to "Pipeline script from SCM".
+Set SCM to "Git".
+Paste your GitHub repo URL.
+Set Branch Specifier to "main".
+Leave Script Path as "Jenkinsfile" (default, since it sits at repo root).
+```
+
+### Step 3: Enable the GitHub webhook trigger (Jenkins UI)
+```text
+In the same job's configuration page, scroll to "Build Triggers".
+Check "GitHub hook trigger for GITScm polling".
+Save the job.
+```
+
+### Step 4: Add the webhook (GitHub UI)
+```text
+Go to your repository on GitHub > Settings > Webhooks > Add webhook.
+Payload URL: http://<jenkins-public-ip>:8080/github-webhook/
+Content type: application/json
+Which events: "Just the push event"
+Click "Add webhook".
+```
+
+### Step 5: Test the connection
+```text
+Push a small commit to your repository.
+Check the Jenkins dashboard — a new build should start automatically within a few seconds, with no manual trigger.
+```
