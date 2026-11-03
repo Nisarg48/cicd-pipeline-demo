@@ -279,3 +279,61 @@ aws iam attach-role-policy \
 ```text
 Now write the CI half of the Jenkinsfile: Checkout → Build → Test → Push to ECR. Push a commit, confirm the image actually lands in ECR. This is a complete, testable milestone on its own, before anything touches Kubernetes.
 ```
+
+## EKS Setup
+
+### Create Cluster on EKS
+```sh
+eksctl create cluster \
+    --name development-cluster \
+    --region ap-southeast-2 \
+    --vpc-public-subnets <Subnet-A-ID>,<Subnet-B-ID> \
+    --nodegroup-name standard-worker \
+    --node-type t3.small \
+    --nodes 2 \
+    --managed
+```
+
+### Add the ArgoCD Helm repo
+```sh
+helm repo add argocd https://argoproj.github.io/argo-helm
+helm repo update
+```
+
+### Create a namespace for ArgoCD
+```sh
+kubectl create namespace argocd
+kubectl get namespaces
+```
+
+### Install ArgoCD Helm chart
+```sh
+helm install argocd argocd/argo-cd -n argocd
+```
+
+### Check pods
+```sh
+kubectl get pods -n argocd -w
+```
+
+### Retrieve the initial admin password
+```sh
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+```
+
+### Expose the Argocd UI using LB
+```sh
+kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+```
+
+### Restrict who can reach ArgoCD (Optional)
+```sh
+kubectl patch svc argocd-server -n argocd -p '{"spec": {"loadBalancerSourceRanges": ["<YOUR-IP>/32"]}}'
+```
+
+### Register the ArgoCD Application pointing at kubernetes/
+```sh
+kubectl apply -f ./argocd/argocd-app.yaml -n argocd
+```
+
+### Create Deployment and Sevice file inside kubernetes/

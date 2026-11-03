@@ -1,0 +1,48 @@
+apiVersion: argoproj.io/v1alpha1
+# Tells Kubernetes which API this resource type belongs to.
+# This one is ArgoCD's own custom type, not a built-in Kubernetes type like Pod or Service.
+
+kind: Application
+# The resource type itself. "Application" is ArgoCD's core building block —
+# one Application = one thing ArgoCD fully manages: watch a repo path, deploy it, keep it synced.
+
+metadata:
+  name: -app
+  # Just a label — how this Application shows up in the ArgoCD UI and in kubectl commands.
+  # Doesn't affect what actually gets deployed, purely for you to recognize it.
+  namespace: argocd
+  # Which namespace the Application OBJECT ITSELF lives in — always "argocd",
+  # since that's where ArgoCD's own components run.
+  # This is NOT the namespace your app's pods run in — that's set separately below.
+
+spec:
+  project: default
+  # Which ArgoCD "Project" this belongs to. Projects group Applications and can restrict
+  # permissions between teams. "default" has no extra restrictions — fine for a solo project.
+
+  source:
+  # Where ArgoCD pulls the DESIRED STATE from.
+    repoURL: https://github.com/Nisarg48/cicd-pipeline-demo.git
+    targetRevision: main
+    # Which branch to track.
+    path: kubernetes
+    # Which folder inside the repo to watch — everything else (like application/) is ignored.
+
+  destination:
+  # Where ArgoCD deploys that desired state TO.
+    server: https://kubernetes.default.svc
+    # A fixed, special value meaning "this same cluster ArgoCD is running in."
+    # Not a real address you'd type anywhere else — it's always this exact string for in-cluster deploys.
+    namespace: -app
+    # The namespace your app's Deployment and Service actually land in.
+
+  syncPolicy:
+  # How ArgoCD behaves when Git and the cluster don't match.
+    automated:
+      prune: true
+      # If you delete something from kubernetes/ in Git, ArgoCD deletes it from the cluster too.
+      selfHeal: true
+      # If someone manually edits the cluster directly, ArgoCD reverts it back to match Git.
+    syncOptions:
+      - CreateNamespace=true
+      # If "webapp" doesn't exist yet, ArgoCD creates it automatically instead of failing.
