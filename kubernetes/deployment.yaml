@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: -deployment
+  namespace: -app
+  labels:
+    app: -deployment # just tags this Deployment object, not used for matching
+spec:
+  replicas: 2 # how many Pod copies to keep running
+  selector:
+    matchLabels:
+      app: -app # must match template.metadata.labels below, exactly
+  template:
+    metadata:
+      labels:
+        app: -app # same as spec.selector.matchLabels.app
+    spec:
+      containers:
+      - name: -container
+        image: 
+        ports:
+        - containerPort: 80 # must match Service targetPort, and what nginx actually binds to
