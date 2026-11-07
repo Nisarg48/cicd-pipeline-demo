@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blog-frontend-deployment
+  namespace: blog-app
+  labels:
+    app: blog-frontend-deployment # just tags this Deployment object, not used for matching
+spec:
+  replicas: 2 # how many Pod copies to keep running
+  selector:
+    matchLabels:
+      app: blog-frontend-app # must match template.metadata.labels below, exactly
+  template:
+    metadata:
+      labels:
+        app: blog-frontend-app # same as spec.selector.matchLabels.app
+    spec:
+      containers:
+      - name: blog-frontend-container
+        image: 
+        ports:
+        - containerPort: 80 # must match Service targetPort, and what nginx actually binds to

@@ -7,7 +7,7 @@ kind: Application
 # one Application = one thing ArgoCD fully manages: watch a repo path, deploy it, keep it synced.
 
 metadata:
-  name: -app
+  name: blog-app
   # Just a label — how this Application shows up in the ArgoCD UI and in kubectl commands.
   # Doesn't affect what actually gets deployed, purely for you to recognize it.
   namespace: argocd
@@ -33,7 +33,7 @@ spec:
     server: https://kubernetes.default.svc
     # A fixed, special value meaning "this same cluster ArgoCD is running in."
     # Not a real address you'd type anywhere else — it's always this exact string for in-cluster deploys.
-    namespace: -app
+    namespace: blog-app
     # The namespace your app's Deployment and Service actually land in.
 
   syncPolicy:

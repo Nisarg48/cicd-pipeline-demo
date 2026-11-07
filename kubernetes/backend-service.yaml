@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: blog-backend-service
+  namespace: blog-app
+spec:
+  type: ClusterIP
+  selector:
+    app: blog-backend-app # same as pod labels
+  ports:
+    - protocol: TCP
+      port: 5000 # what other things call this Service on — Ingress references this
+      targetPort: 5000 # same as container port
