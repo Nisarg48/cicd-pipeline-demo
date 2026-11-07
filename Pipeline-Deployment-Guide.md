@@ -213,7 +213,7 @@ echo "EC2_PUBLIC_IP=$EC2_PUBLIC_IP"
 ssh -i my-ec2-keypair.pem ec2-user@$EC2_PUBLIC_IP
 ```
 
-### Install Java, then Jenkins
+### Install Java, Jenkins and Docker
 ```sh
 sudo yum update -y
 ```
@@ -228,6 +228,10 @@ sudo yum install wget -y
 sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
 sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
 sudo yum install jenkins -y
+sudo yum install docker -y
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker jenkins
 sudo systemctl start jenkins
 sudo systemctl enable jenkins
 sudo systemctl status jenkins
@@ -287,9 +291,15 @@ Check the Jenkins dashboard — a new build should start automatically within a 
 
 ### Create ECR Repository
 ```sh
-export ECR_REPO_NAME="jenkins-argocd-eks-demo/<App-Name>"
+export ECR_FRONTEND_REPO_NAME="jenkins-argocd-eks-demo/frontend"
 aws ecr create-repository \
-    --repository-name $ECR_REPO_NAME \
+    --repository-name $ECR_FRONTEND_REPO_NAME \
+    --region $AWS_REGION
+```
+```sh
+export ECR_BACKEND_REPO_NAME="jenkins-argocd-eks-demo/backend"
+aws ecr create-repository \
+    --repository-name $ECR_BACKEND_REPO_NAME \
     --region $AWS_REGION
 ```
 
@@ -618,7 +628,13 @@ aws iam delete-role --role-name jenkins-iam-role
 ### Delete the ECR repository
 ```sh
 aws ecr delete-repository \
-    --repository-name $ECR_REPO_NAME \
+    --repository-name $ECR_FRONTEND_REPO_NAME \
+    --force \
+    --region $AWS_REGION
+```
+```sh
+aws ecr delete-repository \
+    --repository-name $ECR_BACKEND_REPO_NAME \
     --force \
     --region $AWS_REGION
 ```
