@@ -139,7 +139,7 @@ aws ec2 authorize-security-group-ingress \
 aws ec2 authorize-security-group-ingress \
     --group-id $SG_ID \
     --protocol tcp --port 8080 \
-    --cidr $MY_PUBLIC_IP/32 \
+    --cidr 0.0.0.0/0 \
     --region $AWS_REGION
 ```
 
@@ -229,12 +229,28 @@ sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/
 sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
 sudo yum install jenkins -y
 sudo yum install docker -y
+sudo yum install git -y
 sudo systemctl start docker
 sudo systemctl enable docker
 sudo usermod -aG docker jenkins
 sudo systemctl start jenkins
 sudo systemctl enable jenkins
 sudo systemctl status jenkins
+```
+
+```text
+Without this, Jenkins's Built-In Node goes offline automatically — /tmp on a micro instance is a small RAM-backed filesystem that can never clear Jenkins's default 1 GiB threshold, even with plenty of real disk space elsewhere.
+```
+```sh
+sudo EDITOR=nano systemctl edit jenkins
+```
+Add between ### and ### empty space
+```sh
+[Service]
+Environment="JAVA_OPTS=-Djava.awt.headless=true -Dhudson.node_monitors.TemporarySpaceMonitor.freeSpaceThreshold=100MiB"
+```
+```sh
+sudo systemctl restart jenkins
 ```
 ```sh
 sudo cat /var/lib/jenkins/secrets/initialAdminPassword
@@ -265,14 +281,26 @@ Set Branch Specifier to "main".
 Leave Script Path as "Jenkinsfile" (default, since it sits at repo root).
 ```
 
-### Step 3: Enable the GitHub webhook trigger (Jenkins UI)
+### Step 3: Add GitHub credentials (required for private repos)
+```text
+On GitHub: Settings > Developer settings > Personal access tokens > Tokens (classic)
+> Generate new token (classic). Check the "repo" scope. Copy the token immediately.
+
+In Jenkins, on the job's Configure page: click "+ Add" next to the Credentials
+dropdown. Kind: "Username with password". Username: your GitHub username.
+Password: the token (not your GitHub login password). ID: github-credentials.
+
+Select "github-credentials" in the Credentials dropdown, then Save.
+```
+
+### Step 4: Enable the GitHub webhook trigger (Jenkins UI)
 ```text
 In the same job's configuration page, scroll to "Build Triggers".
 Check "GitHub hook trigger for GITScm polling".
 Save the job.
 ```
 
-### Step 4: Add the webhook (GitHub UI)
+### Step 5: Add the webhook (GitHub UI)
 ```text
 Go to your repository on GitHub > Settings > Webhooks > Add webhook.
 Payload URL: http://<jenkins-public-ip>:8080/github-webhook/
@@ -281,7 +309,7 @@ Which events: "Just the push event"
 Click "Add webhook".
 ```
 
-### Step 5: Test the connection
+### Step 6: Test the connection
 ```text
 Push a small commit to your repository.
 Check the Jenkins dashboard — a new build should start automatically within a few seconds, with no manual trigger.
