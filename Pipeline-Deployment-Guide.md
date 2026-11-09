@@ -218,7 +218,7 @@ ssh -i my-ec2-keypair.pem ec2-user@$EC2_PUBLIC_IP
 sudo yum update -y
 ```
 ```sh
-sudo yum install java-17-amazon-corretto -y
+sudo yum install java-21-amazon-corretto -y
 ```
 ```sh
 java -version
