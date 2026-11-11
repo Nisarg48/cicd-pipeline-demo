@@ -17,6 +17,6 @@ spec:
     spec:
       containers:
       - name: blog-frontend-container
-        image: ACCOUNT_ID_REDACTED.dkr.ecr.ap-southeast-2.amazonaws.com/jenkins-argocd-eks-demo/frontend:13
+        image: ACCOUNT_ID_REDACTED.dkr.ecr.ap-southeast-2.amazonaws.com/jenkins-argocd-eks-demo/frontend:15
         ports:
         - containerPort: 80 # must match Service targetPort, and what nginx actually binds to
