@@ -382,5 +382,77 @@ def delete_post(post_id):
     return jsonify(status="deleted"), 200
 
 
+@app.route("/api/posts/<int:post_id>/comments", methods=["POST"])
+def create_comment(post_id):
+    user_id, error = require_login()
+    if error:
+        return error
+
+    data = request.get_json(silent=True) or {}
+    body = (data.get("body") or "").strip()
+
+    if not body:
+        return jsonify(error="body is required"), 400
+
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT id FROM posts WHERE id = %s", (post_id,))
+            if not cursor.fetchone():
+                return jsonify(error="post not found"), 404
+
+            cursor.execute(
+                "INSERT INTO comments (post_id, user_id, body) "
+                "VALUES (%s, %s, %s)",
+                (post_id, user_id, body),
+            )
+            comment_id = cursor.lastrowid
+        connection.commit()
+
+        with connection.cursor() as cursor:
+            cursor.execute(COMMENT_SELECT + " WHERE c.id = %s", (comment_id,))
+            comment = cursor.fetchone()
+    except pymysql.MySQLError:
+        connection.rollback()
+        app.logger.exception("Failed to create comment")
+        return jsonify(error="database error"), 500
+    finally:
+        connection.close()
+
+    return jsonify(serialize_comment(comment)), 201
+
+
+@app.route("/api/comments/<int:comment_id>", methods=["DELETE"])
+def delete_comment(comment_id):
+    user_id, error = require_login()
+    if error:
+        return error
+
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT user_id FROM comments WHERE id = %s", (comment_id,)
+            )
+            comment = cursor.fetchone()
+
+            if not comment:
+                return jsonify(error="comment not found"), 404
+
+            if comment["user_id"] != user_id:
+                return jsonify(error="forbidden"), 403
+
+            cursor.execute("DELETE FROM comments WHERE id = %s", (comment_id,))
+        connection.commit()
+    except pymysql.MySQLError:
+        connection.rollback()
+        app.logger.exception("Failed to delete comment")
+        return jsonify(error="database error"), 500
+    finally:
+        connection.close()
+
+    return jsonify(status="deleted"), 200
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
