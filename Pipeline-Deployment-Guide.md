@@ -159,7 +159,7 @@ echo "AMI_ID=$AMI_ID"
 export INSTANCE_ID=$(aws ec2 run-instances \
                         --image-id $AMI_ID \
                         --count 1 \
-                        --instance-type t2.micro \
+                        --instance-type t3.micro \
                         --key-name my-ec2-keypair \
                         --security-group-ids $SG_ID \
                         --subnet-id $SUBNET_A_ID \
@@ -255,6 +255,19 @@ sudo systemctl restart jenkins
 ```sh
 sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 ```
+```sh
+df -h /tmp
+```
+```sh
+sudo mount -o remount,size=2G /tmp
+```
+```sh
+sudo systemctl edit tmp.mount
+```
+```text
+[Mount]
+Options=mode=1777,strictatime,nosuid,nodev,size=2G
+```
 
 ### Access Jenkins UI
 ```text
@@ -346,6 +359,19 @@ testable milestone on its own, before anything touches Kubernetes.
 ```
 
 ## EKS Setup
+
+### Enable auto-assign public IP on both subnets
+```sh
+aws ec2 modify-subnet-attribute \
+    --subnet-id $SUBNET_A_ID \
+    --map-public-ip-on-launch \
+    --region $AWS_REGION
+
+aws ec2 modify-subnet-attribute \
+    --subnet-id $SUBNET_B_ID \
+    --map-public-ip-on-launch \
+    --region $AWS_REGION
+```
 
 ### Create Cluster on EKS
 ```sh
@@ -513,6 +539,36 @@ aws ec2 authorize-security-group-ingress \
     --port 3306 \
     --source-group $EKS_NODE_SG_ID \
     --region $AWS_REGION
+```
+## Database Secret for the Backend
+
+### Confirm the app namespace already exists
+```sh
+kubectl get namespace blog-app
+```
+
+### Create the Kubernetes Secret with DB credentials
+```sh
+kubectl create secret generic blog-db-secret -n blog-app \
+    --from-literal=DB_HOST=$RDS_ENDPOINT \
+    --from-literal=DB_PORT=3306 \
+    --from-literal=DB_NAME=blogdb \
+    --from-literal=DB_USER=admin \
+    --from-literal=DB_PASSWORD=$DB_MASTER_PASSWORD \
+    --from-literal=SECRET_KEY=$(openssl rand -hex 32)
+```
+
+### Watch the rollout
+```sh
+kubectl rollout status deployment/blog-backend-deployment -n blog-app
+```
+
+### Verify DB connectivity without exposing anything publicly
+```sh
+kubectl port-forward svc/blog-backend-service -n blog-app 5000:5000
+```
+```sh
+curl http://localhost:5000/health/db
 ```
 
 ## Deletion
