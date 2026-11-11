@@ -15,6 +15,10 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
+                script {
+                    env.BUILD_SHA = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
+                    env.BUILD_TIME = sh(script: 'date -u +%Y-%m-%dT%H:%M:%SZ', returnStdout: true).trim()
+                }
             }
         }
 
@@ -32,7 +36,7 @@ pipeline {
 
         stage('Build Backend Image') {
             steps {
-                sh "docker build -t ${ECR_REGISTRY}/${BACKEND_REPO}:${IMAGE_TAG} application/backend"
+                sh "docker build --build-arg BUILD_SHA=${env.BUILD_SHA} --build-arg BUILD_TIME=${env.BUILD_TIME} -t ${ECR_REGISTRY}/${BACKEND_REPO}:${IMAGE_TAG} application/backend"
             }
         }
 

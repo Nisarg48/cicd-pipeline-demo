@@ -120,8 +120,8 @@ def health_db():
 @app.route("/version", methods=["GET"])
 def version():
     return jsonify(
-        sha=os.environ.get("BUILD_SHA", "unknown"),
-        build_time=os.environ.get("BUILD_TIME", "unknown"),
+        sha=os.environ.get("BUILD_SHA") or "unknown",
+        build_time=os.environ.get("BUILD_TIME") or "unknown",
     )
 
 
