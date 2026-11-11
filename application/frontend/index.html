@@ -7,18 +7,19 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <h1>Blog App</h1>
+  <header class="site-header">
+    <a class="brand" href="#/">Blog App</a>
+    <nav id="nav" class="nav"></nav>
   </header>
 
-  <main>
-    <p>Welcome to the blog application.</p>
-  </main>
+  <main id="app" class="site-main"></main>
 
-  <footer>
+  <footer class="site-footer">
     <span>Build SHA: <span id="build-sha">unknown</span></span>
     <span>Built at: <span id="build-time">unknown</span></span>
   </footer>
+
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
   <script src="script.js"></script>
 </body>
