@@ -44,7 +44,15 @@ def mask_email(email):
     return f"{local[:2]}***@{domain}"
 
 
-def public_user(user):
+def masked_user(user):
+    return {
+        "id": user["id"],
+        "username": user["username"],
+        "email": mask_email(user["email"]),
+    }
+
+
+def own_user(user):
     return {
         "id": user["id"],
         "username": user["username"],
@@ -154,7 +162,7 @@ def register():
     finally:
         connection.close()
 
-    return jsonify(id=user_id, username=username, email=email), 201
+    return jsonify(id=user_id, username=username, email=mask_email(email)), 201
 
 
 @app.route("/api/login", methods=["POST"])
@@ -189,7 +197,7 @@ def login():
     session.clear()
     session["user_id"] = user["id"]
 
-    return jsonify(public_user(user)), 200
+    return jsonify(masked_user(user)), 200
 
 
 @app.route("/api/logout", methods=["POST"])
@@ -222,7 +230,7 @@ def me():
         session.clear()
         return jsonify(error="not logged in"), 401
 
-    return jsonify(public_user(user)), 200
+    return jsonify(own_user(user)), 200
 
 
 @app.route("/api/posts", methods=["GET"])
