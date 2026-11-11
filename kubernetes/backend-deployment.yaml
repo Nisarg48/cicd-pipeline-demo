@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: blog-backend-container
-        image: ACCOUNT_ID_REDACTED.dkr.ecr.ap-southeast-2.amazonaws.com/jenkins-argocd-eks-demo/backend:7
+        image: ACCOUNT_ID_REDACTED.dkr.ecr.ap-southeast-2.amazonaws.com/jenkins-argocd-eks-demo/backend:9
         envFrom:
           - secretRef:
               name: blog-db-secret
