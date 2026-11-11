@@ -219,5 +219,4 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-blog-app-build-plan.md
 my-ec2-keypair.pem
